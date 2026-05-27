@@ -1,18 +1,18 @@
 ﻿using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Items;
-using Exiled.Events;
 using Exiled.Events.EventArgs.Player;
 using MEC;
 using PlayerRoles;
 using System;
+using System.Collections.Generic;
 
 namespace MatysiakAmmoWipe
 {
     public class FreshAmmoPlugin : Plugin<Config>
     {
         public override string Name => "FreshAmmoRules";
-        public override string Author => "Matysiak";
+        public override string Author => "JastrzabDev";
         public override Version Version => new Version(2, 0, 0);
         public override string Prefix => "fresh_ammo";
 
@@ -30,20 +30,19 @@ namespace MatysiakAmmoWipe
 
         private void OnSpawned(SpawnedEventArgs ev)
         {
-            // Zabezpieczenie przed błędami, gdy gracz lub jego rola nie istnieje
             if (ev.Player == null || ev.Player.Role == null) return;
 
             Team team = ev.Player.Role.Team;
-            RoleTypeId role = ev.Player.Role.Type;
+            RoleTypeId initialRole = ev.Player.Role.Type;
 
-            // Plugin dotyczy tylko sił Fundacji i Rebelii Chaosu
             if (team != Team.FoundationForces && team != Team.ChaosInsurgency)
                 return;
 
-            // Opóźnienie 1.5s pozwala grze na przydzielenie domyślnych przedmiotów
             Timing.CallDelayed(1.5f, () =>
             {
-                if (ev.Player == null || !ev.Player.IsAlive) return;
+                if (ev.Player == null || !ev.Player.IsAlive || ev.Player.Role.Type != initialRole) return;
+
+                List<AmmoType> processedAmmo = new List<AmmoType>();
 
                 foreach (var item in ev.Player.Items)
                 {
@@ -51,14 +50,15 @@ namespace MatysiakAmmoWipe
                     {
                         AmmoType ammoType = (AmmoType)firearm.AmmoType;
 
-                        if (role == RoleTypeId.FacilityGuard)
+                        if (processedAmmo.Contains(ammoType)) continue;
+                        processedAmmo.Add(ammoType);
+
+                        if (initialRole == RoleTypeId.FacilityGuard)
                         {
-                            // Ochroniarz dostaje dodatkową pulę z configu
-                            ev.Player.AddAmmo(ammoType, Config.GuardExtraAmmo);
+                            ev.Player.AddAmmo(ammoType, this.Config.GuardExtraAmmo);
                         }
                         else
                         {
-                            // Reszta klas otrzymuje sztywny limit z configu
                             ushort maxAmmo = GetMaxAmmoLimit(ammoType);
                             ev.Player.SetAmmo(ammoType, maxAmmo);
                         }
@@ -71,11 +71,11 @@ namespace MatysiakAmmoWipe
         {
             switch (ammoType)
             {
-                case AmmoType.Nato556: return Config.MaxAmmo556;
-                case AmmoType.Nato762: return Config.MaxAmmo762;
-                case AmmoType.Nato9: return Config.MaxAmmo9mm;
-                case AmmoType.Ammo12Gauge: return Config.MaxAmmo12Gauge;
-                case AmmoType.Ammo44Cal: return Config.MaxAmmo44Cal;
+                case AmmoType.Nato556: return this.Config.MaxAmmo556;
+                case AmmoType.Nato762: return this.Config.MaxAmmo762;
+                case AmmoType.Nato9: return this.Config.MaxAmmo9mm;
+                case AmmoType.Ammo12Gauge: return this.Config.MaxAmmo12Gauge;
+                case AmmoType.Ammo44Cal: return this.Config.MaxAmmo44Cal;
                 default: return 0;
             }
         }
