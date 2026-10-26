@@ -2,6 +2,7 @@
 using Exiled.API.Interfaces;
 using PlayerRoles;
 using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace MatysiakAmmoWipe
 {
@@ -10,68 +11,23 @@ namespace MatysiakAmmoWipe
         public bool IsEnabled { get; set; } = true;
         public bool Debug { get; set; } = false;
 
-        public Dictionary<RoleTypeId, Dictionary<AmmoType, ushort>> RoleAmmoLimits { get; set; } = new Dictionary<RoleTypeId, Dictionary<AmmoType, ushort>>
+        [Description("Opóźnienie (s) po spawnie, żeby gra zdążyła nadać domyślny ekwipunek.")]
+        public float Delay { get; set; } = 1f;
+
+        [Description("Role, które mają być pominięte (np. Facility Guard).")]
+        public List<RoleTypeId> ExcludedRoles { get; set; } = new List<RoleTypeId>
         {
-            {
-                RoleTypeId.FacilityGuard, new Dictionary<AmmoType, ushort>
-                {
-                    { AmmoType.Nato9, 60 }
-                }
-            },
-            {
-                RoleTypeId.NtfPrivate, new Dictionary<AmmoType, ushort>
-                {
-                    { AmmoType.Nato556, 120 },
-                    { AmmoType.Nato9, 30 }
-                }
-            },
-            {
-                RoleTypeId.NtfSergeant, new Dictionary<AmmoType, ushort>
-                {
-                    { AmmoType.Nato556, 160 },
-                    { AmmoType.Nato9, 30 }
-                }
-            },
-            {
-                RoleTypeId.NtfCaptain, new Dictionary<AmmoType, ushort>
-                {
-                    { AmmoType.Nato556, 200 },
-                    { AmmoType.Nato9, 60 }
-                }
-            },
-            {
-                RoleTypeId.NtfSpecialist, new Dictionary<AmmoType, ushort>
-                {
-                    { AmmoType.Nato556, 200 },
-                    { AmmoType.Nato9, 60 }
-                }
-            },
-            {
-                RoleTypeId.ChaosConscript, new Dictionary<AmmoType, ushort>
-                {
-                    { AmmoType.Nato762, 120 },
-                    { AmmoType.Ammo12Gauge, 14 }
-                }
-            },
-            {
-                RoleTypeId.ChaosRifleman, new Dictionary<AmmoType, ushort>
-                {
-                    { AmmoType.Nato762, 160 }
-                }
-            },
-            {
-                RoleTypeId.ChaosRepressor, new Dictionary<AmmoType, ushort>
-                {
-                    { AmmoType.Nato762, 200 }
-                }
-            },
-            {
-                RoleTypeId.ChaosMarauder, new Dictionary<AmmoType, ushort>
-                {
-                    { AmmoType.Ammo12Gauge, 54 },
-                    { AmmoType.Ammo44Cal, 48 }
-                }
-            }
+            RoleTypeId.FacilityGuard
+        };
+
+        [Description("Maksymalna ilość amunicji dla danego typu. Ustaw zgodnie z limitami na serwerze.")]
+        public Dictionary<AmmoType, ushort> MaxAmmo { get; set; } = new Dictionary<AmmoType, ushort>
+        {
+            { AmmoType.Nato9, 200 },
+            { AmmoType.Nato556, 200 },
+            { AmmoType.Nato762, 200 },
+            { AmmoType.Ammo12Gauge, 54 },
+            { AmmoType.Ammo44Cal, 48 }
         };
     }
 }

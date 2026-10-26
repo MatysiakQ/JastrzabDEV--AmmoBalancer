@@ -1,9 +1,12 @@
-﻿using Exiled.API.Features;
+﻿using Exiled.API.Enums;
+using Exiled.API.Features;
+using Exiled.API.Features.Items;
 using Exiled.Events.EventArgs.Player;
 using MEC;
 using PlayerRoles;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MatysiakAmmoWipe
 {
@@ -11,7 +14,7 @@ namespace MatysiakAmmoWipe
     {
         public override string Name => "FreshAmmoRules";
         public override string Author => "JastrzabDev";
-        public override Version Version => new Version(3, 0, 0);
+        public override Version Version => new Version(3, 1, 0);
         public override string Prefix => "fresh_ammo";
 
         public override void OnEnabled()
@@ -28,20 +31,32 @@ namespace MatysiakAmmoWipe
 
         private void OnSpawned(SpawnedEventArgs ev)
         {
-            if (ev.Player == null || ev.Player.Role == null) return;
+            Player player = ev.Player;
+            if (player == null || player.Role == null) return;
 
-            RoleTypeId initialRole = ev.Player.Role.Type;
+            // Tylko MTF i Chaos
+            Team team = player.Role.Team;
+            if (team != Team.FoundationForces && team != Team.ChaosInsurgency) return;
 
-            Timing.CallDelayed(1.5f, () =>
+            RoleTypeId role = player.Role.Type;
+            if (Config.ExcludedRoles.Contains(role)) return;
+
+            Timing.CallDelayed(Config.Delay, () =>
             {
-                if (ev.Player == null || !ev.Player.IsAlive || ev.Player.Role.Type != initialRole) return;
+                // Gracz mógł wyjść, zginąć albo zmienić rolę
+                if (player == null || !player.IsAlive || player.Role.Type != role) return;
 
-                if (this.Config.RoleAmmoLimits.TryGetValue(initialRole, out var ammoConfig))
+                foreach (Firearm firearm in player.Items.OfType<Firearm>().ToList())
                 {
-                    foreach (var ammoEntry in ammoConfig)
-                    {
-                        ev.Player.SetAmmo(ammoEntry.Key, ammoEntry.Value);
-                    }
+                    AmmoType ammoType = firearm.AmmoType;
+                    if (ammoType == AmmoType.None) continue;
+
+                    if (!Config.MaxAmmo.TryGetValue(ammoType, out ushort max)) continue;
+
+                    player.SetAmmo(ammoType, max);
+
+                    if (Config.Debug)
+                        Log.Debug($"{player.Nickname} ({role}): {firearm.Type} -> {ammoType} = {max}");
                 }
             });
         }
