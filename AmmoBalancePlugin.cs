@@ -5,17 +5,16 @@ using Exiled.Events.EventArgs.Player;
 using MEC;
 using PlayerRoles;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
-namespace MatysiakAmmoWipe
+namespace AmmoBalance
 {
-    public class FreshAmmoPlugin : Plugin<Config>
+    public class AmmoBalancePlugin : Plugin<Config>
     {
-        public override string Name => "FreshAmmoRules";
+        public override string Name => "AmmoBalance";
         public override string Author => "JastrzabDev";
         public override Version Version => new Version(3, 1, 0);
-        public override string Prefix => "fresh_ammo";
+        public override string Prefix => "ammo_balance";
 
         public override void OnEnabled()
         {

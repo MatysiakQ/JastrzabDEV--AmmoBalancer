@@ -4,7 +4,7 @@ using PlayerRoles;
 using System.Collections.Generic;
 using System.ComponentModel;
 
-namespace MatysiakAmmoWipe
+namespace AmmoBalance
 {
     public class Config : IConfig
     {
