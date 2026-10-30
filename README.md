@@ -70,7 +70,7 @@ Testy uruchamiają rzeczywiste źródła pluginu z zastępczym API i zegarem; pr
 
 ### Wydania
 
-Po zatwierdzeniu zmian utwórz tag zgodny z wersją projektu, np. `v3.2.0`, i wyślij go do GitHub. Workflow sprawdza wersję tagu, buduje plugin, wykonuje testy i publikuje DLL wraz z SHA-256. Historyczny tag `v3.1.0` nie odpowiada w pełni nazwom w jego DLL; nie jest przepinany.
+Po zatwierdzeniu zmian utwórz tag zgodny z wersją projektu, np. `v3.2.0`, i wyślij go do GitHub. Alternatywnie commit na `master` z oznaczeniem `[release]` uruchamia publikację i tworzy tag na tym samym, przetestowanym commicie. Workflow buduje plugin, wykonuje testy i publikuje DLL wraz z SHA-256 oraz opisem PL/EN z `RELEASE_NOTES.md`. Istniejący tag wskazujący inny commit nie jest nadpisywany. Historyczny tag `v3.1.0` nie odpowiada w pełni nazwom w jego DLL; nie jest przepinany.
 
 ## English
 
@@ -84,7 +84,7 @@ A positive delay snapshots the original weapon calibres; removed calibres are sk
 
 Build and test using the commands above (SDK .NET 8). The production build targets .NET Framework 4.8 and uses the bundled EXILED 9.12.6 references. Server compatibility must be checked with the actual game/plugins. Install only `AmmoBalance.dll`; remove all historical DLL names listed above and retain one copy. Existing `delay: 1` configurations keep the optional delay; set it to zero to use immediate assignment.
 
-Tag releases must match the project version. CI builds/tests the tagged source and publishes the DLL plus its SHA-256. The historical v3.1.0 tag is preserved.
+Tag releases must match the project version. A `[release]` commit on `master` can also publish a release, creating its tag at the same tested commit. CI publishes the DLL, SHA-256 and Polish/English notes from `RELEASE_NOTES.md`. Existing tags pointing to another commit are never overwritten. The historical v3.1.0 tag is preserved.
 
 ## License
 
