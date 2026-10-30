@@ -1,28 +1,40 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net48</TargetFramework>
-		<Platforms>AnyCPU;ARM64</Platforms>
+		<AssemblyName>AmmoBalance</AssemblyName>
+		<Version>3.2.0</Version>
+		<LangVersion>7.3</LangVersion>
+		<Platforms>AnyCPU;x64</Platforms>
+		<ReferencesPath Condition="'$(ReferencesPath)' == ''">$(MSBuildThisFileDirectory)REFERENCES</ReferencesPath>
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Compile Remove="tests/**/*.cs" />
+		<PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" Version="1.0.3" PrivateAssets="all" />
 		<Reference Include="Assembly-CSharp">
-			<HintPath>..\REFERENCES\Assembly-CSharp.dll</HintPath>
+			<HintPath>$(ReferencesPath)/Assembly-CSharp.dll</HintPath>
+			<Private>false</Private>
 		</Reference>
 		<Reference Include="Assembly-CSharp-firstpass">
-			<HintPath>..\REFERENCES\Assembly-CSharp-firstpass.dll</HintPath>
+			<HintPath>$(ReferencesPath)/Assembly-CSharp-firstpass.dll</HintPath>
+			<Private>false</Private>
 		</Reference>
 		<Reference Include="Exiled.API">
-			<HintPath>..\REFERENCES\Exiled.API.dll</HintPath>
+			<HintPath>$(ReferencesPath)/Exiled.API.dll</HintPath>
+			<Private>false</Private>
 		</Reference>
 		<Reference Include="Exiled.Events">
-			<HintPath>..\REFERENCES\Exiled.Events.dll</HintPath>
+			<HintPath>$(ReferencesPath)/Exiled.Events.dll</HintPath>
+			<Private>false</Private>
 		</Reference>
 		<Reference Include="NorthwoodLib">
-			<HintPath>..\REFERENCES\NorthwoodLib.dll</HintPath>
+			<HintPath>$(ReferencesPath)/NorthwoodLib.dll</HintPath>
+			<Private>false</Private>
 		</Reference>
 		<Reference Include="UnityEngine.CoreModule">
-			<HintPath>..\REFERENCES\UnityEngine.CoreModule.dll</HintPath>
+			<HintPath>$(ReferencesPath)/UnityEngine.CoreModule.dll</HintPath>
+			<Private>false</Private>
 		</Reference>
 	</ItemGroup>
 
