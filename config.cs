@@ -10,43 +10,53 @@ namespace AmmoBalance
 {
     public class Config : IConfig
     {
+        private static readonly HashSet<AmmoType> SupportedTypes = new HashSet<AmmoType>
+        {
+            AmmoType.Nato9,
+            AmmoType.Nato556,
+            AmmoType.Nato762,
+            AmmoType.Ammo12Gauge,
+            AmmoType.Ammo44Cal,
+        };
+
         public bool IsEnabled { get; set; } = true;
-        public bool Debug { get; set; } = false;
 
-        [Description("Opcjonalne opóźnienie uzupełnienia (0–10 s). Domyślnie 0: ekwipunek jest już nadany w Spawned. Nie odnawia wyrzuconej/zużytej amunicji.")]
-        public float Delay { get; set; } = 0f;
+        public bool Debug { get; set; }
 
-        [Description("Respektuj limit amunicji gracza, w tym pancerz i limity gry. False celowo pozwala je przekroczyć.")]
+        [Description("Opóźnienie uzupełnienia w sekundach (0-10). 0 = natychmiast przy spawnie.")]
+        public float Delay { get; set; }
+
+        [Description("Ogranicza przydział do realnego limitu gracza (pancerz, limity gry).")]
         public bool RespectAmmoLimits { get; set; } = true;
 
-        [Description("Przydzielaj amunicję również przy zmianach roli z zachowaniem ekwipunku. Domyślnie takie zmiany są pomijane.")]
-        public bool ApplyToPreservedInventory { get; set; } = false;
+        [Description("Przydziela amunicję także przy zmianie roli z zachowaniem ekwipunku.")]
+        public bool ApplyToPreservedInventory { get; set; }
 
-        [Description("Role pomijane przez plugin. [] nie wyklucza żadnej roli; null przywraca FacilityGuard.")]
-        public List<RoleTypeId> ExcludedRoles { get; set; } = new List<RoleTypeId> { RoleTypeId.FacilityGuard };
+        [Description("Role pomijane przez plugin. Pusta lista nie wyklucza żadnej roli.")]
+        public List<RoleTypeId> ExcludedRoles { get; set; } = CreateDefaultExcludedRoles();
 
-        [Description("Docelowa rezerwa amunicji na spawn, nie stały limit zbierania. Typy nieobecne i pusty słownik są pomijane. Null wyłącza przydziały.")]
+        [Description("Docelowa rezerwa amunicji przy spawnie. Kalibry spoza listy nie są zmieniane.")]
         public Dictionary<AmmoType, ushort> MaxAmmo { get; set; } = new Dictionary<AmmoType, ushort>
         {
             { AmmoType.Nato9, 200 },
             { AmmoType.Nato556, 200 },
             { AmmoType.Nato762, 200 },
             { AmmoType.Ammo12Gauge, 54 },
-            { AmmoType.Ammo44Cal, 48 }
+            { AmmoType.Ammo44Cal, 48 },
         };
 
         internal void Normalize(Action<string> warn)
         {
-            if (float.IsNaN(Delay) || float.IsInfinity(Delay) || Delay < 0f || Delay > 10f)
+            if (float.IsNaN(Delay) || Delay < 0f || Delay > 10f)
             {
-                warn("AmmoBalance: delay must be finite and between 0 and 10 seconds; using 0.");
+                warn("AmmoBalance: delay must be between 0 and 10 seconds; using 0.");
                 Delay = 0f;
             }
 
             if (ExcludedRoles == null)
             {
                 warn("AmmoBalance: excluded_roles is null; restoring FacilityGuard. Use [] to exclude no roles.");
-                ExcludedRoles = new List<RoleTypeId> { RoleTypeId.FacilityGuard };
+                ExcludedRoles = CreateDefaultExcludedRoles();
             }
 
             if (MaxAmmo == null)
@@ -55,11 +65,18 @@ namespace AmmoBalance
                 MaxAmmo = new Dictionary<AmmoType, ushort>();
             }
 
-            foreach (AmmoType type in MaxAmmo.Keys.Where(type => type == AmmoType.None || !Enum.IsDefined(typeof(AmmoType), type)).ToArray())
+            foreach (AmmoType type in MaxAmmo.Keys.Where(IsUnsupported).ToArray())
             {
                 warn($"AmmoBalance: ignoring unsupported ammo type {type}.");
                 MaxAmmo.Remove(type);
             }
+        }
+
+        private static bool IsUnsupported(AmmoType type) => !SupportedTypes.Contains(type);
+
+        private static List<RoleTypeId> CreateDefaultExcludedRoles()
+        {
+            return new List<RoleTypeId> { RoleTypeId.FacilityGuard };
         }
     }
 }

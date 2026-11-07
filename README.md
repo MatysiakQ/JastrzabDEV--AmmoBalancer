@@ -1,32 +1,32 @@
 # AmmoBalance 3.2.0
 
-Starting reserve ammo for MTF and Chaos Insurgency in SCP: Secret Laboratory.
+Plugin EXILED do SCP: Secret Laboratory. Po spawnie ustawia rezerwę amunicji MTF i Rebelii Chaosu na wartości z konfiguracji, ale tylko dla kalibrów broni, które gracz faktycznie ma w ekwipunku.
 
 ## Polski
 
-Plugin rozpoznaje kalibry broni w ekwipunku po spawnie i przydziela rezerwę z konfiguracji. Domyślnie pomija Facility Guard, inne drużyny i zmiany roli z zachowaniem ekwipunku. Dwie bronie tego samego kalibru oznaczają jeden przydział. Magazynki broni nie są zmieniane.
+### Jak to działa
 
-### Zmiany w 3.2.0
+- Po zdarzeniu `Spawned` plugin sprawdza bronie gracza i ustawia rezerwę każdego kalibru na wartość z `max_ammo`.
+- Dwie bronie tego samego kalibru to jeden przydział. Magazynki w broniach nie są zmieniane.
+- Pomijani są Facility Guard, pozostałe drużyny oraz zmiany klasy z zachowanym ekwipunkiem.
+- Cel nie przekracza realnego limitu gracza (np. z pancerzem). Wyłączysz to przez `respect_ammo_limits: false`.
+- Amunicja ponad cel jest zabierana od razu.
+- To jednorazowy przydział startowy. Plugin nie ogranicza późniejszego zbierania amunicji.
 
-- Domyślny przydział jest natychmiastowy: EXILED nadaje standardowy ekwipunek przed `Spawned`.
-- Opcjonalne opóźnienie jest przypisane do konkretnej instancji roli. Nowy spawn, wyjście, restart rundy i wyłączenie pluginu anulują oczekujący przydział.
-- Opóźniony przydział dodaje wyłącznie różnicę ustaloną przy spawnie. Przykład: start 100, cel 200, wyrzucono 60 przed timerem → 140 w rezerwie i 60 na ziemi. Nie następuje odnowienie pełnych 200.
-- Nadmiar ponad cel jest usuwany od razu, również przy dodatnim `delay`.
-- Limity gry i pancerza są domyślnie respektowane. Można jawnie wyłączyć to w konfiguracji.
-- Walidacja obsługuje kolekcje `null`, nieprawidłowe kalibry i opóźnienia.
-- Poprawiono ścieżki bibliotek, nazwę DLL i wersję assembly. CI buduje plugin i wykonuje testy; wydanie z tagu powstaje z tego samego commitu.
+Przy `delay` większym od zera dodawana jest tylko różnica policzona w chwili spawnu. Przykład: gracz startuje ze 100, cel to 200, przed końcem timera wyrzuca 60. Po timerze ma 140 w rezerwie, a nie nowe 200. Oczekujący przydział znika przy kolejnym spawnie gracza, jego wyjściu, restarcie rundy i wyłączeniu pluginu. Broń dodana później przez inny plugin nie dostaje amunicji, a dłuższy `delay` tego nie zmieni.
 
-### Wymagania i instalacja
+### Instalacja
 
-- SCP: Secret Laboratory z EXILED. Dołączone referencje mają wersję **EXILED 9.12.6**; kompilacja korzysta z rzeczywistych bibliotek w `REFERENCES/`.
-- .NET Framework 4.8, serwer x64.
-- Testy bez serwera nie potwierdzają zgodności wszystkich pluginów ani każdej wersji SCP:SL. Sprawdź używaną wersję na serwerze testowym.
+Wymagania: SCP: Secret Laboratory z EXILED, serwer x64, .NET Framework 4.8.
 
-Pobierz `AmmoBalance.dll` z wydania odpowiadającego wybranej wersji albo z artefaktu CI **AmmoBalance-3.2.0** po udanym buildzie. Skopiuj tylko tę DLL do `EXILED/Plugins` i zrestartuj serwer. Konfiguracja ma prefiks `ammo_balance`.
+1. Pobierz `AmmoBalance.dll` z wydania lub z artefaktu CI.
+2. Wrzuć plik do `EXILED/Plugins` i zrestartuj serwer.
 
-**Aktualizacja:** usuń poprzednie kopie `MatysiakAmmoWipe.dll`, `FreshAmmoRules.dll`, `AmmoBalancer.dll` i `MatysiakAmmoBalance.dll`. Zastąp też poprzednie `AmmoBalance.dll`; pozostaw jedną kopię pluginu. Stara sekcja `fresh_ammo` nie jest używana. Istniejący `delay: 1` pozostaje opóźnieniem — zmień go na `0`, aby korzystać z natychmiastowego przydziału.
+Przy aktualizacji usuń starsze DLL-e: `MatysiakAmmoWipe.dll`, `FreshAmmoRules.dll`, `AmmoBalancer.dll`, `MatysiakAmmoBalance.dll` oraz poprzednią `AmmoBalance.dll`. Ma zostać jedna kopia. Sekcja `fresh_ammo` w configu nie jest już używana. Jeśli masz `delay: 1`, plugin nadal będzie czekał sekundę. Ustaw `delay: 0`, żeby przydział był natychmiastowy.
 
 ### Konfiguracja
+
+Prefiks configu to `ammo_balance`.
 
 ```yaml
 ammo_balance:
@@ -45,47 +45,41 @@ ammo_balance:
     Ammo44Cal: 48
 ```
 
-| Opcja | Zachowanie |
+| Opcja | Opis |
 |---|---|
-| `delay` | Skończona liczba 0–10 sekund; błędna wartość daje ostrzeżenie i jest zastępowana przez 0. |
-| `respect_ammo_limits` | Cel to minimum z konfiguracji pluginu i rzeczywistego limitu gracza, uwzględniającego pancerz. `false` pozwala celowo przekroczyć limit gry. |
-| `apply_to_preserved_inventory` | `false` pomija zmianę klasy bez flagi `AssignInventory`; `true` dopuszcza zmianę istniejących zapasów. |
-| `excluded_roles` | `[]` nie wyklucza ról. `null` przywraca wykluczenie Facility Guard i daje ostrzeżenie. |
-| `max_ammo` | Docelowa rezerwa przy spawnie. Brak kalibru oznacza brak zmiany; `{}` jest pustym słownikiem, `null` daje pusty słownik z ostrzeżeniem. Zero to prawidłowy cel. |
-
-To przydział startowy; plugin nie wprowadza stałego limitu zbierania amunicji. Przy dodatnim opóźnieniu zapamiętuje kalibry obecne w chwili `Spawned`, a przed wykonaniem sprawdza, czy gracz nadal ma broń danego kalibru. Nie przydziela kolejnej amunicji za broń dodaną później przez inny plugin. Późny custom loadout wymaga uzgodnienia kolejności z jego autorem — samo zwiększanie opóźnienia tego nie rozwiązuje.
+| `delay` | Opóźnienie w sekundach, 0-10. Niepoprawna wartość jest zastępowana zerem i zgłaszana w logu. |
+| `respect_ammo_limits` | Cel to mniejsza z wartości: z configu albo limit gracza z pancerzem. |
+| `apply_to_preserved_inventory` | `true` obejmuje też zmiany klasy bez `AssignInventory`. |
+| `excluded_roles` | Pominięte role. `[]` nie wyklucza nikogo, `null` przywraca Facility Guard. |
+| `max_ammo` | Docelowa rezerwa przy spawnie. Obsługiwane kalibry: `Nato9`, `Nato556`, `Nato762`, `Ammo12Gauge`, `Ammo44Cal`. Kaliber spoza listy zostaje bez zmian, `0` jest poprawnym celem, `null` wyłącza przydziały. |
 
 ### Budowanie i testy
 
-```bash
-git clone https://github.com/MatysiakQ/JastrzabDEV--AmmoBalancer.git
-cd JastrzabDEV--AmmoBalancer
+Potrzebny jest .NET SDK 8.
+
+```
 dotnet build MatysiakAmmoBalance.csproj -c Release -p:Platform=x64
 dotnet run --project tests/AmmoBalance.Tests.csproj -c Release
 ```
 
-Wymagany jest SDK .NET 8. Pakiet reference assemblies umożliwia kompilację `net48` również na Linuxie. DLL powstaje w `bin/x64/Release/net48/AmmoBalance.dll`; biblioteki gry i EXILED nie są kopiowane do katalogu wynikowego. Możesz podać własny zgodny zestaw bibliotek przez `-p:ReferencesPath=/pełna/ścieżka`.
+Wynik trafia do `bin/x64/Release/net48/AmmoBalance.dll`. Biblioteki gry i EXILED są brane z `REFERENCES/` (dołączone: Exiled.API i Exiled.Events z wersji 9.15.3) i nie są kopiowane do wyniku. Własny katalog podasz przez `-p:ReferencesPath=/pełna/ścieżka`. Biblioteki gry w `REFERENCES/` (`Assembly-CSharp`, `Assembly-CSharp-firstpass`, `UnityEngine.CoreModule`, `NorthwoodLib`) są zgodne z EXILED 9.15.3. Po każdej aktualizacji gry lub EXILED podmień pliki w `REFERENCES/` (z `SCPSL_Data/Managed` serwera) i zbuduj plugin od nowa.
 
-Testy uruchamiają rzeczywiste źródła pluginu z zastępczym API i zegarem; produkcyjny build osobno sprawdza zgodność z dołączonymi DLL. Przed wdrożeniem sprawdź w grze standardowe fale, zmianę klasy na tę samą, rozłączenie, reload, pancerze i używane custom loadouty.
+Testy uruchamiają kod pluginu na atrapach API i zegara, więc nie zastąpią próby na serwerze. Przed wdrożeniem sprawdź zwykłe fale, zmianę klasy, wyjście gracza, reload, pancerze i swoje customowe loadouty.
 
 ### Wydania
 
-Po zatwierdzeniu zmian utwórz tag zgodny z wersją projektu, np. `v3.2.0`, i wyślij go do GitHub. Alternatywnie commit na `master` z oznaczeniem `[release]` uruchamia publikację i tworzy tag na tym samym, przetestowanym commicie. Workflow buduje plugin, wykonuje testy i publikuje DLL wraz z SHA-256 oraz opisem PL/EN z `RELEASE_NOTES.md`. Istniejący tag wskazujący inny commit nie jest nadpisywany. Historyczny tag `v3.1.0` nie odpowiada w pełni nazwom w jego DLL; nie jest przepinany.
+Wydanie powstaje po wypchnięciu tagu zgodnego z wersją projektu (np. `v3.2.0`) albo po commicie na `master` z `[release]` w opisie. CI buduje plugin, odpala testy i publikuje DLL z sumą SHA-256 oraz treścią z `RELEASE_NOTES.md`. Istniejący tag wskazujący na inny commit nie jest nadpisywany.
 
 ## English
 
-AmmoBalance assigns starting reserve ammo based on the firearms actually present at `Spawned`. Facility Guards, other teams, and role changes preserving inventory are skipped by default. Magazines are untouched.
+AmmoBalance sets starting reserve ammo for MTF and Chaos Insurgency after they spawn, based on the firearms they are actually carrying. Facility Guards, other teams and class changes that keep the inventory are skipped by default. Magazines are not touched.
 
-Version 3.2.0 defaults to immediate assignment and respects the player's real ammo limit, including armor. Optional delayed grants belong to one role instance and are canceled on another spawn, disconnect, round reset or plugin disable. They add only the original spawn-time deficit: starting with 100, targeting 200 and dropping 60 during the delay leaves 140 in reserve, not a fresh 200. Excess starting ammo is trimmed immediately.
+The target is capped by the player's real ammo limit (armor included) unless `respect_ammo_limits` is `false`, and anything above the target is removed right away. With a positive `delay`, only the deficit measured at spawn is added later: start at 100, target 200, drop 60 before the timer, and you end up with 140, not a fresh 200. Pending grants are cancelled on a new spawn, disconnect, round restart and plugin disable.
 
-The YAML above uses the same keys in both languages. Set `respect_ammo_limits: false` to deliberately bypass game limits, or `apply_to_preserved_inventory: true` to also affect class changes that preserve inventory. Invalid delays reset to zero. Null exclusions restore the default Guard exclusion; null ammo mappings disable grants with a warning. Empty collections are supported.
+This is a one-time starting grant, not a pickup cap. Weapons added later by other plugins get no ammo.
 
-A positive delay snapshots the original weapon calibres; removed calibres are skipped at execution, and newly added custom-loadout calibres receive no extra grant. This is a one-time starting allocation, not a continuous pickup limit. Late custom loadouts need explicit integration.
+Config keys are the same as in the YAML above. Install only `AmmoBalance.dll` in `EXILED/Plugins` and remove the old DLL names listed in the Polish section. Build and test with the commands above (.NET SDK 8, target .NET Framework 4.8, bundled Exiled.API and Exiled.Events 9.15.3). Releases are created from a version tag or a `[release]` commit on `master`.
 
-Build and test using the commands above (SDK .NET 8). The production build targets .NET Framework 4.8 and uses the bundled EXILED 9.12.6 references. Server compatibility must be checked with the actual game/plugins. Install only `AmmoBalance.dll`; remove all historical DLL names listed above and retain one copy. Existing `delay: 1` configurations keep the optional delay; set it to zero to use immediate assignment.
+## Licencja
 
-Tag releases must match the project version. A `[release]` commit on `master` can also publish a release, creating its tag at the same tested commit. CI publishes the DLL, SHA-256 and Polish/English notes from `RELEASE_NOTES.md`. Existing tags pointing to another commit are never overwritten. The historical v3.1.0 tag is preserved.
-
-## License
-
-[MIT — LICENSE.txt](LICENSE.txt)
+MIT, zobacz [LICENSE.txt](LICENSE.txt).

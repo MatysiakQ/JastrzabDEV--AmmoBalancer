@@ -1,4 +1,3 @@
-// Minimal test doubles. Production compilation uses the real REFERENCES/*.dll.
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,17 +30,28 @@ namespace Exiled.API.Features.Items
     }
 }
 
+namespace Exiled.API.Features.Roles
+{
+    using PlayerRoles;
+
+    public class Role
+    {
+        public Role(RoleTypeId type, Team team) { Type = type; Team = team; }
+        public RoleTypeId Type { get; }
+        public Team Team { get; }
+    }
+}
+
 namespace Exiled.API.Features
 {
     using Exiled.API.Enums;
     using Exiled.API.Features.Items;
+    using Exiled.API.Features.Roles;
     using PlayerRoles;
 
-    public class TestRole
+    public class TestRole : Role
     {
-        public TestRole(RoleTypeId type, Team team) { Type = type; Team = team; }
-        public RoleTypeId Type { get; }
-        public Team Team { get; }
+        public TestRole(RoleTypeId type, Team team) : base(type, team) { }
     }
 
     public class Player
@@ -49,7 +59,7 @@ namespace Exiled.API.Features
         public string Nickname { get; set; } = "Test player";
         public bool IsAlive { get; set; } = true;
         public bool IsConnected { get; set; } = true;
-        public TestRole Role { get; set; } = new TestRole(RoleTypeId.NtfSergeant, Team.FoundationForces);
+        public Role Role { get; set; } = new TestRole(RoleTypeId.NtfSergeant, Team.FoundationForces);
         public List<Item> Items { get; } = new List<Item>();
         public Dictionary<AmmoType, ushort> Ammo { get; } = new Dictionary<AmmoType, ushort>();
         public Dictionary<AmmoType, ushort> Limits { get; } = new Dictionary<AmmoType, ushort>();
